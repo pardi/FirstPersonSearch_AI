@@ -1,5 +1,6 @@
-# P1-navigation
-This project presents the Reinforcement Learning algorithm to solve the P1-Navigation project of the Udacity - Deep Reinforcement Learning course.
+# First Person Searching - Navigation project
+This project proposes a solution to a First Person Searching problem. The project is basedon the P1-navigation projected from Udacity - Deep Reinforcement Learning course.
+
 ## Installation
 - Install Unity python packages (https://github.com/Unity-Technologies/ml-agents/blob/main/docs/Installation.md)
 - Numpy
