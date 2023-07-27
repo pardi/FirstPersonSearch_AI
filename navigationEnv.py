@@ -1,9 +1,9 @@
 from unityagents import UnityEnvironment
 
 
-class NavigationEnv(object):
+class NavigationEnv:
 
-    def __init__(self, file_path):
+    def __init__(self, file_path: str):
 
         # Load the environment
         self.unityEnv = UnityEnvironment(file_name=file_path)
@@ -18,7 +18,7 @@ class NavigationEnv(object):
         env_info = self.unityEnv.reset(train_mode=True)[self.brain_name]
         self.state_size = len(env_info.vector_observations[0])
 
-    def step(self, action):
+    def step(self, action: int) -> (list, float, bool, dict):
         # take the action to the environment
         env_info = self.unityEnv.step(action)[self.brain_name]
 
@@ -31,7 +31,7 @@ class NavigationEnv(object):
 
         return next_state, reward, done, env_info
 
-    def reset(self, train_mode=True):
+    def reset(self, train_mode: bool = True) -> (list, float):
         # Reset the environment
         env_info = self.unityEnv.reset(train_mode=train_mode)[self.brain_name]
 
