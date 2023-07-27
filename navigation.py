@@ -7,24 +7,30 @@ import matplotlib.pyplot as plt
 import os
 import argparse
 
-def mov_avg(data, window):
-    v = deque([] * window)
+import logging
+logging.basicConfig(level=logging.INFO)
+
+
+def mov_avg(data: list, window: int) -> list:
+    values = deque([] * window)
 
     ma_data = []
 
     for d in data:
-        v.append(d)
-        ma_data.append(np.average(v))
+        values.append(d)
+        ma_data.append(np.average(values))
 
     return ma_data
 
 
-def run_network(params: dict):
+def run_network(params: dict) -> None:
 
     # define the device to run the code into: GPU when available, CPU otherwise
     device = torch.device(params["use_gpu"] if torch.cuda.is_available() else "cpu")
 
-    file_path = "Banana_Linux/Banana.x86"
+    # Target/Final score
+    final_score = 13.0
+
     env = NavigationEnv(params["file_env_path"])
 
     # Network parameters
@@ -38,9 +44,6 @@ def run_network(params: dict):
                     "replay_buffer_size": int(1e6),
                     "batch_size": 128}
 
-    # Final score
-    final_score = 13.0
-
     # Create agent
     agent = DQNAgent(agent_params)
 
@@ -48,9 +51,6 @@ def run_network(params: dict):
 
     if not params["train"]:
         agent.load(best_weight_path)
-
-    # Set timeout
-    max_t = 500
 
     # list containing scores from each episode
     scores = []
@@ -61,7 +61,7 @@ def run_network(params: dict):
 
         state, score = env.reset()
 
-        for t in range(max_t):
+        for t in range(params["timeout"]):
             action = agent.egreedy_policy(state)
             next_state, reward, done, _ = env.step(action)
 
@@ -85,7 +85,7 @@ def run_network(params: dict):
             print('\rEpisode {i_episode}\tAverage Score: {np.mean(scores_window)}')
 
         # Check if we hit the final score
-        if np.mean(scores_window) >= final_score and params["train"]:
+        if params["train"] and np.mean(scores_window) >= final_score:
             print(f"\nEnvironment solved in {i_episode} episodes!\tAverage Score: {np.mean(scores_window)}")
             agent.save(best_weight_path)
 
@@ -111,6 +111,7 @@ if __name__ == "__main__":
     parser.add_argument('--best_weight_folder', action='store_true', help='Folder storing the weights for the network',
                         default="best_weights/")
     parser.add_argument('--use_gpu', action='store_true', help='Use GPU',  choices=[True, False], default=True)
+    parser.add_argument('--timeout', action='store_true', help='Set timeout', default=500)
     args = parser.parse_args()
 
     param = {"train": args.train,
@@ -118,7 +119,8 @@ if __name__ == "__main__":
              "best_weight_folder": args.best_weight_folder,
              "use_gpu": "cuda:0" if args.use_gpu == "True" else "cpu",
              "gamma": 0.99,
-             "file_env_path": "Banana_Linux/Banana.x86"}
+             "file_env_path": "Banana_Linux/Banana.x86",
+             "timeout": args.timeout}
 
     run_network(param)
 
