@@ -55,7 +55,7 @@ We consider the algorithm solved when the averaged reward is equal or above 13.0
 
 The algorithm reaches an average a reward above 13.0 in 100 episodes after 928 episodes.
 
-![Tux, the Linux mascot](p1_navigation_results.png)
+![Tux, the Linux mascot](img/p1_navigation_results.png)
 
 ## Future work
 
