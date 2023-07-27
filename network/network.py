@@ -10,7 +10,7 @@ class QNetwork(nn.Module):
         self.fc2 = nn.Linear(hidden_layer1, hidden_layer2)
         self.fc3 = nn.Linear(hidden_layer2, action_size)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
 
