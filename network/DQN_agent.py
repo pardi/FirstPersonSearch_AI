@@ -6,23 +6,23 @@ from ReplayBuffer import ReplayBuffer
 import random
 
 
-class DQNAgent(object):
-    def __init__(self, gamma, state_size, action_size, device, eps=1.0, eps_min=0.006, eps_decay=0.998, opt_lr=1e-4, replay_buffer_size=int(1e5), batch_size=64, tau=1e-3, target_update=10):
-        self.gamma = gamma
-        self.eps = eps
-        self.eps_min = eps_min
-        self.eps_decay = eps_decay
-        self.action_size = action_size
-        self.device = device
-        self.qnetwork_target = QNetwork(state_size, action_size).to(device)
-        self.qnetwork_train = QNetwork(state_size, action_size).to(device)
-        self.optimiser = torch.optim.Adam(self.qnetwork_train.parameters(), lr=opt_lr)
-        self.tau = tau
-        self.memory = ReplayBuffer(replay_buffer_size, batch_size, device)
+class DQNAgent:
+    def __init__(self, params: dict):
+        self.gamma = params["gamma"]
+        self.eps = params["eps"]
+        self.eps_min = params["eps_min"]
+        self.eps_decay = params["eps_decay"]
+        self.action_size = params["action_size"]
+        self.device = params["device"]
+        self.qnetwork_target = QNetwork(params["state_size"], self.action_size).to(self.device)
+        self.qnetwork_train = QNetwork(params["state_size"], self.action_size).to(self.device)
+        self.optimiser = torch.optim.Adam(self.qnetwork_train.parameters(), lr=params["opt_lr"])
+        self.tau = params["tau"]
+        self.memory = ReplayBuffer(params["replay_buffer_size"], params["batch_size"], self.device)
         self.t_step = 0
-        self.every_update = target_update
+        self.every_update = params["target_update"]
 
-    def egreedy_policy(self, state):
+    def egreedy_policy(self, state: np.ndarray) -> np.ndarray:
 
         state = torch.from_numpy(state).float().unsqueeze(0).to(self.device)
 
@@ -41,8 +41,9 @@ class DQNAgent(object):
         else:
             return random.choice(np.arange(self.action_size))
 
-    def learn(self, experience):
+    def learn(self, experience) -> None:
 
+        # Unpack the experience tuple
         states, actions, rewards, next_states, dones = experience
 
         qnn_targets_next = self.qnetwork_target(next_states).detach().max(1)[0].unsqueeze(1)
@@ -60,14 +61,15 @@ class DQNAgent(object):
 
         self.soft_update()
 
-    def soft_update(self):
+    def soft_update(self) -> None:
         # Soft update model parameters.
         # theta_target = tau * theta_local + (1 - tau) * theta_target
 
         for target_param, local_param in zip(self.qnetwork_target.parameters(), self.qnetwork_train.parameters()):
             target_param.data.copy_(self.tau * local_param.data + (1.0 - self.tau) * target_param.data)
 
-    def step(self, state, action, reward, next_state, done):
+    def step(self, state: np.ndarray, action: np.ndarray, reward: np.ndarray, next_state: np.ndarray, done: np.ndarray) -> None:
+
         # Save experience in replay memory
         self.memory.add(state, action, reward, next_state, done)
 
@@ -79,12 +81,12 @@ class DQNAgent(object):
                 experiences = self.memory.sample()
                 self.learn(experiences)
 
-    def update_eps(self):
+    def update_eps(self) -> None:
         self.eps = max(self.eps * self.eps_decay, self.eps_min)
 
-    def save(self, weight_path):
+    def save(self, weight_path) -> None:
         torch.save(self.qnetwork_train.state_dict(), weight_path)
 
-    def load(self, weight_path):
+    def load(self, weight_path) -> None:
         self.qnetwork_train.load_state_dict(torch.load(weight_path))
         self.qnetwork_target.load_state_dict(torch.load(weight_path))
